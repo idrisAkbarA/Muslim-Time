@@ -44,6 +44,7 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
+		"dayjs": "^1.11.13",
 		"pocketbase": "^0.26.0"
 	}
 }
