@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import customParseFormat from 'dayjs/plugin/customParseFormat'
 
+dayjs.extend(customParseFormat)
 dayjs.extend(utc);
 
 /** @type {import('./$types').RequestHandler} */
@@ -22,19 +24,28 @@ export async function GET() {
     const res = await fetch(`https://api.aladhan.com/v1/calendar?latitude=${LATITUDE}&longitude=${LONGITUDE}&method=${METHOD}&month=${month}&year=${year}`);
     const data = await res.json();
     const days = data.data;
-
+    
     for (const day of days) {
+        console.log(day);
         const dateStr = day.date.gregorian.date; // "YYYY-MM-DD"
         const timings = day.timings;
-
+        const dateFormat = day.date.gregorian.format;
+        
         const prayers = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
         prayers.forEach(name => {
             const time = timings[name].split(' ')[0]; // "HH:MM"
             const [hour, minute] = time.split(':');
-            const dt = dayjs.utc(`${dateStr}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00Z`);
-
+            const apiDate = dayjs(dateStr,dateFormat)
+            // console.log("apiDate",apiDate);
+            // console.log("apiDate",dateStr,dateFormat);
+            
+            const dt = dayjs.utc(`${apiDate.format("YYYY-MM-DD")}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00Z`);
+            console.log("dt.date",dt.date);
+            
             const start = dt.format('YYYYMMDDTHHmmss') + 'Z';
+            // console.log(start);
+            
             const end = dt.add(10, 'minute').format('YYYYMMDDTHHmmss') + 'Z';
 
             calendar.push(
@@ -66,6 +77,7 @@ export async function GET() {
 
     const icsContent = calendar.join('\r\n');
 
+    // return new Response();
     return new Response(icsContent, {
         headers: {
             'Content-Type': 'text/calendar',
